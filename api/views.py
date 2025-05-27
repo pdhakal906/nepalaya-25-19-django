@@ -1,9 +1,16 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from notes.models import Note
-from .serializer import NoteSerializer
-
+from .serializer import NoteSerializer, UploadSerializer
+import os
+from django.conf import settings
 from rest_framework import viewsets
+from rest_framework.parsers import MultiPartParser, FormParser
+from drf_yasg.utils import swagger_auto_schema
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import re
+from modules.ocr_engine import extract_text
 
 
 # class ListNotes(APIView):
@@ -27,32 +34,44 @@ from rest_framework import viewsets
 #         return Response(notes)
 
 
-class UploadView(APIView):
-    def post(self, request, format=None):
-        """
-        Upload a file.
-        """
-
-        pass
-
-
 class NotesViewset(viewsets.ModelViewSet):
-
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
     http_method_names = ["get", "post", "put", "delete", "head", "options", "trace"]
 
-    def create(self, request):
-        return Response({"message": "Note created successfully!"})
 
-    def update(self, request, pk=None):
-        note = Note.objects.get(pk=pk)
-        note.text = request.data.get("text")
+class UploadView(APIView):
+    parser_classes = [
+        MultiPartParser,
+        FormParser,
+    ]
 
-        note.save()
-        return Response({"message": "Note updated successfully!"})
+    @swagger_auto_schema(request_body=UploadSerializer)
+    def post(self, request, format=None):
+        """
+        Return a list of all users.
+        """
+        print(request.data)
+        # return Response({"message": "File uploaded successfully"})
+        uploaded_file = request.data.get("file")
 
-    def destroy(self, request, pk=None):
-        note = Note.objects.get(pk=pk)
-        note.delete()
-        return Response({"message": "Note deleted successfully!"})
+        if uploaded_file:
+            save_path = os.path.join(settings.MEDIA_ROOT, uploaded_file.name)
+            path = default_storage.save(save_path, ContentFile(uploaded_file.read()))
+            print("processing image.....")
+
+            result = extract_text(os.path.join(settings.MEDIA_ROOT, path))
+            print(result)
+
+            extracted_text = ""
+            if result["STATUS"] == "SUCCESS":
+                extracted_text = result["DATA"]
+            return Response(
+                {
+                    "file_path": "127.0.0.1:8000/images/"
+                    + re.sub("/upload/", "/", path),
+                    "message": "File uploaded successfully",
+                    # "text": extracted_text,
+                    "tetx": "this is text extracted",
+                }
+            )
