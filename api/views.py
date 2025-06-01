@@ -61,17 +61,28 @@ class UploadView(APIView):
             print("processing image.....")
 
             result = extract_text(os.path.join(settings.MEDIA_ROOT, path))
-            print(result)
+            # print(result)
 
             extracted_text = ""
             if result["STATUS"] == "SUCCESS":
                 extracted_text = result["DATA"]
+            # return Response(
+            #     {
+            #         "file_path": "127.0.0.1:8000/images/"
+            #         + re.sub("/upload/", "/", path),
+            #         "message": "File uploaded successfully",
+            #         "text": extracted_text,
+            #         # "tetx": "this is text extracted",
+            #     }
+            # )
+            print(request.build_absolute_uri(path))
             return Response(
                 {
-                    "file_path": "127.0.0.1:8000/images/"
-                    + re.sub("/upload/", "/", path),
+                    "file_path": re.sub(
+                        "/api/upload/", "/images/", request.build_absolute_uri(path)
+                    ),
                     "message": "File uploaded successfully",
-                    # "text": extracted_text,
-                    "tetx": "this is text extracted",
+                    "text": extracted_text,
+                    # "tetx": "this is text extracted",
                 }
             )

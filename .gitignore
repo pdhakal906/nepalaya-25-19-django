@@ -5,3 +5,4 @@ db.sqlite3
 .history
 venv
 photos/
+.history

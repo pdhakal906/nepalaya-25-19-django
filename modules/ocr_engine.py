@@ -1,9 +1,9 @@
 import requests
 import os
 
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-# load_dotenv()
+load_dotenv()
 
 
 import os
@@ -17,8 +17,8 @@ def format_response(status, message, data=""):
 
 
 def extract_text(image_path):
-    # api_key = os.getenv("API_KEY")
-    api_key = "API_KEY_HERE"  # Replace with your actual API key
+    api_key = os.getenv("API_KEY")
+    # api_key = "API_KEY_HERE"  # Replace with your actual API key
 
     api_url = "https://api.ocr.space/parse/image"
     if not api_key:
